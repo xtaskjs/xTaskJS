@@ -1,0 +1,28 @@
+
+# Build output
+/src/dist
+
+# IDE
+/.idea
+/.vscode
+
+# Dependencies
+/src/node_modules
+
+# Environment variables
+/src/.env
+/.env
+
+# Miscelaneaneous
+/src/.npmrc
+/src/.yarnrc
+/src/yarn.lock
+/src/package-lock.json
+/src/.DS_Store
+/src/.tsbuildinfo
+.DS_Store
+
+#Jest
+/src/.tmp
+/tmp
+/src/pacakges/**/.tmp
