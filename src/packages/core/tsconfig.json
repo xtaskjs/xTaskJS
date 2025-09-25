@@ -2,16 +2,11 @@
   "compilerOptions": {
     "target": "ES2021",
     "module": "commonjs",
-    "rootDir": "src",
+    "rootDir": "./src",
     "outDir": "dist",
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "baseUrl": ".",
-    "paths": {
-      "@xtaskjs/common": ["./packages/common"],
-      "@xtaskjs/core": ["./packages/core"]
-    }
   },
   "include": ["packages/**/*"],
   "exclude": ["node_modules", "dist"]

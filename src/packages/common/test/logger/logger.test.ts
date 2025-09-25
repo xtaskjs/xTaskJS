@@ -1,4 +1,4 @@
-import { Logger } from "../src/logger";
+import { Logger } from "../../src/logger/logger";
 
 describe("Logger", () => {
   it("Should print logs", () => {

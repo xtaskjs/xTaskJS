@@ -1,5 +1,5 @@
 {
-  "name": "@xtaskjs/core",
+  "name": "@xtaskjs/common",
   "version": "1.0.0",
   "description": "xtaskjs - modern, fast, node.js web framework (@common)",
   "author": "Javier Rodríguez Soler",
