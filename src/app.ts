@@ -1,5 +1,8 @@
 import {bootstrap} from "@xtaskjs/core";
 
+
+
+
 async function main() {
     const kernel = await bootstrap();
     const logger = kernel.getLogger();

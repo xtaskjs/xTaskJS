@@ -1,5 +1,13 @@
+import { Logger } from "@xtaskjs/common";
+
 export class Kernel {
  
+    private logger: Logger;
+
+    constructor(){
+        this.logger = new Logger();
+    }
+
  
     async boot(): Promise<void> {
         // Bootstrapping logic here
@@ -9,4 +17,5 @@ export class Kernel {
         console.log("Kernel has booted.");
     }
    
+     getLogger() { return this.logger; }
 }

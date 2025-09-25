@@ -6,7 +6,7 @@
   "scripts": {
     "start": "ts-node -r tsconfig-paths/register app.ts",
     "build": "npm run clean; tsc",
-    "test": "npm run test --prefix packages/core",
+    "test": "npm run test --prefix packages/core && npm run test --prefix packages/common",
     "clean": "rm -r dist"
   },
   "author": "",
