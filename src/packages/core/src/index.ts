@@ -1,4 +1,4 @@
 import 'reflect-metadata';
 export * from "./bootstrap";
 export * from "./kernel";
-export * from "./di/container"
+export * from "./di"
