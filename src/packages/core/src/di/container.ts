@@ -17,19 +17,17 @@ export class Container{
         const files = await this.scanDir(join(process.cwd(), baseDir));
     
         for (const file of files) {
-             const name = file.toString();
-            console.log("Importing:", name);
-            name.includes("test") && console.log("Skipping test file:", name);
+            const name = file.toString();
             if (name.includes("test")) continue; //skip test files
+            if (name.includes("js")) continue; //skip configuration files
+            if (name.includes("json")) continue; //skip configuration files
+            if (name.includes("index.ts")) continue; //skip export files
             const module = await import(file);
             for ( const key in Object.keys(module)) {
-                const candidate = module[key];
-                console.log("Candidate:", candidate);
-                if (typeof candidate !== "function") continue;
-
+                 const candidate = module[key];
+                 if (typeof candidate !== "function") continue;
                 const meta: ComponentMetadata | undefined = getComponentMetadata(candidate);
                 if (!meta || (meta.condition && !meta.condition())) continue;
-                
                 this.register(candidate, meta);
             }
         }
@@ -38,7 +36,7 @@ export class Container{
 
     // Register aa class with the container
     
-    private register(target: any, meta: ComponentMetadata){
+    public register(target: any, meta: ComponentMetadata){
         const paramTypes: any[] =
             Reflect.getMetadata("design:paramtypes", target) || [];
 

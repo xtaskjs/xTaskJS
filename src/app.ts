@@ -1,11 +1,13 @@
 import {Bootstrap} from "@xtaskjs/core";
-
-
+import { Logger } from "@xtaskjs/common";
 
 async function main() {
     const kernel = await Bootstrap();
-    const logger = kernel.getLogger();
-    logger.info("🚀 Application xTaskJS started successfully.");
+    const container = kernel.getContainer();
+    const logger: Logger = container.get(Logger);
+    logger.info(" 🚀Application has started.");
+    // Destoy the container to trigger PreDestroy methods before exiting
+    container.destroy();
 }
 
 main().catch(err => {

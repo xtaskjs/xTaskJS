@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import { Logger } from "@xtaskjs/common";
 import { Container } from "./di";
 
@@ -14,15 +15,17 @@ export class Kernel {
  
     async boot(): Promise<void> {
         // Bootstrapping logic here
-        console.log("Kernel is booting...");
-        const container = new Container();
-        container.autoload("packages");
-        this.logger = container.get(Logger);
+        this.container = new Container();
+        await
+        this.container.autoload("packages");
+        this.container.register(Logger, {}); // Pass an empty object or valid ComponentMetadata properties
+        this.logger = this.container.get(Logger);
         // Simulate some async operation
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        console.log("Kernel has booted.");
-        container.destroy();
+        this.logger.info("🚀 Kernel started successfully.");
     }
-   
-     getLogger() { return this.logger; }
+
+     getContainer(): Container {
+        return this.container;
+    }
 }
