@@ -4,7 +4,7 @@ import { getPostConstructMethod, getPreDestroyMethod } from "./lifecycle";
 import { readdirSync , statSync } from "fs";
 import { join } from "path";
 import { ManagedInstance } from "./managedinstance";
-
+import { Project } from "ts-morph";
 
 export class Container{
     private providers = new Map<any, () => any>();
@@ -23,12 +23,16 @@ export class Container{
             if (name.includes("json")) continue; //skip configuration files
             if (name.includes("index.ts")) continue; //skip export files
             const module = await import(file);
-            for ( const key in Object.keys(module)) {
-                 const candidate = module[key];
-                 if (typeof candidate !== "function") continue;
-                const meta: ComponentMetadata | undefined = getComponentMetadata(candidate);
-                if (!meta || (meta.condition && !meta.condition())) continue;
-                this.register(candidate, meta);
+            const project = new Project();
+            const sourceFile = project.addSourceFileAtPath(file);
+            const classes = sourceFile.getClasses();
+            for (const cls of classes) {
+               if (cls.getDecorator("Service") || cls.getDecorator("Component") || cls.getDecorator("Controller") || cls.getDecorator("Repository")) {
+                const decorator = cls.getDecorator("Service");
+                const meta = decorator.getArguments()[0];
+                    //TODO: GET METADATA PROPERLY
+                    this.register(module[cls.getName()], meta ? eval(`(${meta.getText()})`) : { scope: "singleton" });
+                }
             }
         }
     
@@ -40,6 +44,7 @@ export class Container{
         const paramTypes: any[] =
             Reflect.getMetadata("design:paramtypes", target) || [];
 
+        console.log(`Registering component: ${target.name} with dependencies:`, paramTypes.map(t => t.name));
         
         const provider = () => {
             //Resolve dependencies
