@@ -1,9 +1,9 @@
 import { Logger } from "@xtaskjs/common";
-import { LifeCycleContainer } from "./autoloader";
+import { Container } from "./di";
 
 export class Kernel {
  
-    private container:LifeCycleContainer;
+    private container:Container;
     private logger:Logger;
    
 
@@ -15,8 +15,8 @@ export class Kernel {
     async boot(): Promise<void> {
         // Bootstrapping logic here
         console.log("Kernel is booting...");
-        const container = new LifeCycleContainer();
-        container.autoload("src");
+        const container = new Container();
+        container.autoload("packages");
         this.logger = container.get(Logger);
         // Simulate some async operation
         await new Promise((resolve) => setTimeout(resolve, 1000));

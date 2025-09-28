@@ -1,5 +1,5 @@
 import "reflect-metadata"
-import { getComponentMetadata } from "./component";
+import { ComponentMetadata, getComponentMetadata } from "./component";
 import { getPostConstructMethod, getPreDestroyMethod } from "./lifecycle";  
 import { readdirSync , statSync } from "fs";
 import { join } from "path";
@@ -9,27 +9,36 @@ import { ManagedInstance } from "./managedinstance";
 export class Container{
     private providers = new Map<any, () => any>();
     private singletons = new Map<any, any>();
-    private managedInstances : ManagedInstance[] = [];
+    public managedInstances : ManagedInstance[] = [];
 
-    async autoload(baseDir = "./"){
+    // SCAN FOLDER BASE DIR FOR @Service() AND @Component()
+
+    async autoload(baseDir = "packages"){
         const files = await this.scanDir(join(process.cwd(), baseDir));
     
         for (const file of files) {
+             const name = file.toString();
+            console.log("Importing:", name);
+            name.includes("test") && console.log("Skipping test file:", name);
+            if (name.includes("test")) continue; //skip test files
             const module = await import(file);
             for ( const key in Object.keys(module)) {
                 const candidate = module[key];
+                console.log("Candidate:", candidate);
                 if (typeof candidate !== "function") continue;
 
-                const metadata = getComponentMetadata(candidate) | undefined = getComponentMetadata(candidate);
-                if (!metadata || (metadata.condition && !metadata.condition())) continue;
+                const meta: ComponentMetadata | undefined = getComponentMetadata(candidate);
+                if (!meta || (meta.condition && !meta.condition())) continue;
                 
-                this.register(candidate, metadata);
+                this.register(candidate, meta);
             }
         }
     
     }
+
+    // Register aa class with the container
     
-    private register(target: any, meta: ComponentMetada){
+    private register(target: any, meta: ComponentMetadata){
         const paramTypes: any[] =
             Reflect.getMetadata("design:paramtypes", target) || [];
 
@@ -89,16 +98,8 @@ export class Container{
         this.providers.clear();
     }
     
-    resolve<T>(name: string): T {
-        const service = this.services.get(name);
-        if (!service) {
-            throw new Error(`No provider found for key: ${name}`);
-        }
-        return service;
-    } 
-    
     // Scan folder recursively for .ts or .js files
-    private async scanDir(dir: string): Promise<string[]> {
+    public async scanDir(dir: string): Promise<string[]> {
         let results: string[] = [];
         for (const file of readdirSync(dir)) {
             const full = join (dir, file);

@@ -1,6 +1,4 @@
-import { Service } from '@xtaskjs/core';
-
-@Service()
+import { Service } from '../../../core/src/di/stereotypes';
 export class Logger {
 
     constructor() {}
