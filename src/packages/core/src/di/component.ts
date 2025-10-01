@@ -8,12 +8,16 @@ const COMPONENT_KEY = Symbol("xtaskjs:component");
 export interface ComponentMetadata {
     scope ?: "singleton" | "transient";
     condition?:() => boolean;
+    name?: string;
+    primary?: boolean;
 }
 
 export interface ComponentOptions {
     type?: ComponentType;
     scope?: ScoreType;
     condition?:() => boolean;
+    name?: string;
+    primary?: boolean;
 }
 
 export function Component (options: ComponentOptions = {}) {

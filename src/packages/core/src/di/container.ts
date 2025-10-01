@@ -5,10 +5,17 @@ import { readdirSync , statSync } from "fs";
 import { join } from "path";
 import { ManagedInstance } from "./managedinstance";
 import { Project } from "ts-morph";
+import { getAutoWiredProperties } from "./autowired";
+import { getConstructorQualifiers } from "./qualifier";
+import { get } from "http";
 
 export class Container{
     private providers = new Map<any, () => any>();
     private singletons = new Map<any, any>();
+    private nameToType = new Map<string, any>();
+    private typeToNames = new Map<any, string[]>();
+    private primaryBeans = new Map<any, any>();
+    private resolving = new Set<any>();
     public managedInstances : ManagedInstance[] = [];
 
     // SCAN FOLDER BASE DIR FOR @Service() AND @Component()
@@ -26,15 +33,35 @@ export class Container{
             const project = new Project();
             const sourceFile = project.addSourceFileAtPath(file);
             const classes = sourceFile.getClasses();
+            
             for (const cls of classes) {
                if (cls.getDecorator("Service") || cls.getDecorator("Component") || cls.getDecorator("Controller") || cls.getDecorator("Repository")) {
-                const decorator = cls.getDecorator("Service");
-                const meta = decorator.getArguments()[0];
-                    //TODO: GET METADATA PROPERLY
-                    this.register(module[cls.getName()], meta ? eval(`(${meta.getText()})`) : { scope: "singleton" });
+                    const className = cls.getName();
+                    if (className && module[className]){
+                        const classConstructor = module[className];
+                        const metaData = getComponentMetadata(classConstructor) || { scope: "singleton"};
+                        const beanName = metaData.name || className;
+                        this.registerWithName(classConstructor, metaData, beanName);
+                    }
                 }
             }
+        } 
+    }   
+        
+ 
+    public registerWithName(target: any, meta: ComponentMetadata, name?: string){
+        if (name){
+             this.nameToType.set(name, target);
+             const existingNames = this.typeToNames.get(target) || [];
+             existingNames.push(name);
+             this.typeToNames.set(target, existingNames);
         }
+
+        if (meta.primary){
+            this.primaryBeans.set(target,target);
+        }
+
+        this.register(target, meta);
     
     }
 
@@ -44,32 +71,50 @@ export class Container{
         const paramTypes: any[] =
             Reflect.getMetadata("design:paramtypes", target) || [];
 
-        console.log(`Registering component: ${target.name} with dependencies:`, paramTypes.map(t => t.name));
+        console.log(`Registering component: ${target.name} with dependencies:`, paramTypes.map(t => t?.name || 'unknown'));
         
         const provider = () => {
-            //Resolve dependencies
-            const dependencies = paramTypes.map((dep) => this.get(dep));
-            const instance = new target(...dependencies);
-
-            //PostConstruct
-            const postMethod = getPostConstructMethod(instance);
-            if (postMethod && typeof instance[postMethod] === "function") {
-                instance[postMethod]();
-            }
-
-            //PreDestroy
-            const preMethod = getPreDestroyMethod(instance);
-            if (preMethod && typeof instance[preMethod] === "function") {
-                this.managedInstances.push({
-                    instance,
-                    preDestroy: () => instance[preMethod](),
-                });
+            if (this.resolving.has(target)) {
+                const resolvingNames = Array.from(this.resolving).map(t => t.name || 'unknown').join(" -> ");
+                throw new Error(`Circular dependency detected: ${resolvingNames} -> ${target.name}`);
             }
             
-            return instance;
-        }
+            this.resolving.add(target);
 
-        if (meta.scope === "transient") {
+            
+            try{
+                const qualifiers = getConstructorQualifiers(target);
+                const dependencies = paramTypes.map((dep, index) => {
+                    const qualifier = qualifiers?.[index];
+                    return this.getWithQualifier(dep, qualifier);
+                });
+                
+                const instance = new target(...dependencies);
+                
+                this.injectAutoWiredFields(instance);
+
+                //PostConstruct
+                const postMethod = getPostConstructMethod(instance);
+                if (postMethod && typeof instance[postMethod] === "function") {
+                    instance[postMethod]();
+                }
+
+                //PreDestroy
+                const preMethod = getPreDestroyMethod(instance);
+                if (preMethod && typeof instance[preMethod] === "function") {
+                    this.managedInstances.push({
+                        instance,
+                        preDestroy: () => instance[preMethod](),
+                    });
+                }
+            
+            return instance;
+        } finally {
+            this.resolving.delete(target);
+        }
+    }
+  
+    if (meta.scope === "transient") {
             this.providers.set(target, provider);
         } else { //singleton by default
             this.providers.set(target,()=> {
@@ -77,10 +122,43 @@ export class Container{
                     const instance = provider();
                     this.singletons.set(target, instance);
                 }
-
-                return this.singletons.get(target);
+              return this.singletons.get(target);
             })
         }
+    }
+
+    public getByName<T>(name: string): T {
+        const type = this.nameToType.get(name);
+        if (!type) {
+            throw new Error(`No component found with name: ${name}`);
+        }
+        return this.get(type);
+    }
+
+    private getWithQualifier<T>(type: new (...args: any[]) => T, qualifier?: string): T {
+        if(qualifier){
+            return this.getByName<T>(qualifier);
+        }
+        return this.get(type);
+    }
+
+    private injectAutoWiredFields(instance: any) {
+        const autoWiredProperties = getAutoWiredProperties(instance);
+        autoWiredProperties.forEach((metaData, propertyKey) => {
+            try {
+                let value;
+                if (metaData.quilifier) {
+                    value = this.getByName(metaData.quilifier);
+                } else {
+                    value = this.get(metaData.type);
+                } 
+                instance[propertyKey] = value;
+            }catch (error) {
+                if (metaData.required) {
+                    throw new Error(`Failed to inject required dependency for property "${String(propertyKey)}": ${error.message}`);
+                }
+            }
+        });
     }
 
     // Get instance of class
