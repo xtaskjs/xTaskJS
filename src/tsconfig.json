@@ -13,6 +13,6 @@
       "@xtaskjs/core": ["packages/core"]
     }
   },
-  "include": ["packages/**/*","packages/**/**/*"],
+  "include": ["packages/**/*","packages/**/**/*","packages/**/**/**/*"],
   "exclude": ["node_modules", "dist"]
 }

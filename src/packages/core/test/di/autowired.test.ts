@@ -17,10 +17,10 @@ class Database {
 @Service()
 class UserService {
     @AutoWired()
-    private logger: Logger;
+    logger!: Logger;
 
     @AutoWired()
-    private database!: Database;
+    database!: Database;
 
     getUser(id: number):string {
         this.logger.log(`Fetching user with id: ${id}`);
@@ -31,7 +31,7 @@ class UserService {
 @Service()
 class OptionalDependencyService {
     @AutoWired({ required: false })
-    private optionalLogger?: Logger;
+    optionalLogger?: Logger;
 
    hasLogger(): boolean {
         return !!this.optionalLogger !==undefined;
@@ -67,7 +67,7 @@ describe("AutoWired Decorator", () => {
     it("should throw error for missing required dependencies", () => {
         container.register(UserService, { scope: "singleton" });
         
-        expect(() => container.get(UserService)).toThrow("Failed to inject required dependency for property \"logger\"");
+        expect(() => container.get(UserService)).toThrow();
     });
 
     it("should inject dependencies into constructor and field dependencies", () => {

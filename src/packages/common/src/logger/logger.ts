@@ -5,7 +5,6 @@ import { PostConstruct } from '../../../core/src/di/lifecycle';
 export class Logger {
 
     constructor() {}
-
     
   @PostConstruct()
   init() {

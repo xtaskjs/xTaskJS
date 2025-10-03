@@ -1,5 +1,4 @@
 import "reflect-metadata";
-import { NumericLiteral } from "ts-morph";
 
 const QUALIFIER_KEY = Symbol("xtaskjs:qualifier");
 

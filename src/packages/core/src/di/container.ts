@@ -7,7 +7,7 @@ import { ManagedInstance } from "./managedinstance";
 import { Project } from "ts-morph";
 import { getAutoWiredProperties } from "./autowired";
 import { getConstructorQualifiers } from "./qualifier";
-import { get } from "http";
+
 
 export class Container{
     private providers = new Map<any, () => any>();
@@ -147,8 +147,8 @@ export class Container{
         autoWiredProperties.forEach((metaData, propertyKey) => {
             try {
                 let value;
-                if (metaData.quilifier) {
-                    value = this.getByName(metaData.quilifier);
+                if (metaData.qualifier) {
+                    value = this.getByName(metaData.qualifier);
                 } else {
                     value = this.get(metaData.type);
                 } 

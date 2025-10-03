@@ -1,21 +1,21 @@
 import "reflect-metadata";
 
 const AUTOWIRED_KEY = Symbol("xtaskjs:autowired");
-const AUTOWIRED_PROPS_KEY = Symbol("xtaskjs:autowired_props");
+const AUTOWIRED_PROPS_KEY = Symbol("xtaskjs:autowired:props");
 
 export interface AutoWiredMetaData {
     type: any;
     required: boolean;
-    quilifier?: string;
+    qualifier?: string;
 }
 
-export function AutoWired(options: { required?: boolean; quilifier?: string } = {}) {
+export function AutoWired(options: { required?: boolean; qualifier?: string } = {}) {
     return function (target: any, propertyKey: string | symbol) {
         const type = Reflect.getMetadata("design:type", target, propertyKey);
         const metaData: AutoWiredMetaData = {
             type,
-            required: options.required ?? true,
-            quilifier: options.quilifier,
+            required: options.required !== false,
+            qualifier: options.qualifier,
         };
 
         // Store metadata for the property

@@ -1,18 +1,14 @@
 import "reflect-metadata";
+import { AutoWired, Container } from "@xtaskjs/core";
 import { Logger } from "@xtaskjs/common";
-import { Container } from "./di";
 
 export class Kernel {
  
     private container:Container;
     private logger:Logger;
-   
 
     constructor(){
-        
     }
-
- 
     async boot(): Promise<void> {
         // Bootstrapping logic here
         this.container = new Container();
@@ -27,4 +23,6 @@ export class Kernel {
      getContainer(): Container {
         return this.container;
     }
+
 }
+
