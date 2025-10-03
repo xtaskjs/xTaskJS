@@ -1,4 +1,4 @@
-import { LifeCyclePhase } from "./lifecycle-events";
+import { LifeCyclePhase } from "@xtaskjs/common";
 import *  as os from "os";
 import * as process from "process";
 
@@ -27,12 +27,19 @@ export class ApplicationLifeCycle {
     
     public async emit(event: LifeCyclePhase, payload?:any) {
         const list = this.listeners.get(event) || [];
-        for (const { fn } of list) {
-            await Promise.resolve(fn(payload));
+        for (const { fn, priority } of list) {
+            try {
+                await Promise.resolve(fn(payload));
+            } catch(error) {
+                console.error(`Error in lifecycle handler for phase ${event} (priority ${priority}):`, error);
+                if (event !="error"){
+                    await this.emit("error", error);
+                }
+            }
         }
     }
 
-    public async runRuners(type: "ApplicationRunner" | "CommandLineRunner") {
+    public async runRunners(type: "ApplicationRunner" | "CommandLineRunner") {
         for (const runner of this.runners.filter(r => r.type === type)) {
             await Promise.resolve(runner.fn(process.argv.slice(2)));
         }
@@ -58,9 +65,9 @@ export class ApplicationLifeCycle {
                 });
             }, 5000); //every minute
             
-            await this.runRuners("ApplicationRunner");
+            await this.runRunners("ApplicationRunner");
             await this.emit("ready");
-            await this.runRuners("CommandLineRunner");
+            await this.runRunners("CommandLineRunner");
         } catch (error){
             await this.emit("error", error);
             throw error;
@@ -71,7 +78,8 @@ export class ApplicationLifeCycle {
     public async stop() {
         if(this.metricsInterval){
             clearInterval(this.metricsInterval);
-          
+            this.metricsInterval = undefined;
         }
     }
+
 }

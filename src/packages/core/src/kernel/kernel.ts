@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { AutoWired, Container } from "@xtaskjs/core";
+import { Container } from "@xtaskjs/core";
 import { Logger } from "@xtaskjs/common";
 
 export class Kernel {
@@ -14,15 +14,18 @@ export class Kernel {
         this.container = new Container();
         // Autoload components from the "packages" directory
         await this.container.autoload("packages");
+
         this.logger = await this.container.get(Logger);
         // Simulate some async operation
         await new Promise((resolve) => setTimeout(resolve, 1000));
         this.logger.info("🚀 Kernel started successfully.");
     }
 
-     getContainer(): Container {
+     async getContainer(): Promise<Container> {
         return this.container;
     }
+
+    
 
 }
 

@@ -34,7 +34,7 @@ class OptionalDependencyService {
     optionalLogger?: Logger;
 
    hasLogger(): boolean {
-        return !!this.optionalLogger !==undefined;
+        return this.optionalLogger !==undefined;
     }
 }
 

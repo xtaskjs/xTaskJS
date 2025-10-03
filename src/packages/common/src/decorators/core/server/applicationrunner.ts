@@ -1,7 +1,5 @@
 import { RunnerMeta } from '@xtaskjs/core';
-
-const HANDLERS_KEY = Symbol("eventHandlers");
-const RUNNERS_KEY = Symbol("runners");
+import { RUNNERS_KEY } from './constants';
 
 export function ApplicationRunner(priority = 0): MethodDecorator {
   return (target, propertyKey) => {

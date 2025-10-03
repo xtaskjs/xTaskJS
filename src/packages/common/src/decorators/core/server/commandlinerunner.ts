@@ -1,6 +1,5 @@
 import { RunnerMeta } from '@xtaskjs/core';
-
-const RUNNERS_KEY = Symbol("runners");
+import { RUNNERS_KEY } from './constants';
 
 export function CommandLineRunner(priority = 0): MethodDecorator {
   return (target, propertyKey) => {

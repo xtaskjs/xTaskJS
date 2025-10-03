@@ -7,6 +7,8 @@ import { ManagedInstance } from "./managedinstance";
 import { Project } from "ts-morph";
 import { getAutoWiredProperties } from "./autowired";
 import { getConstructorQualifiers } from "./qualifier";
+import { registerEventHandlers} from "../server";
+import { HANDLERS_KEY, RUNNERS_KEY } from "@xtaskjs/common";
 
 
 export class Container{
@@ -26,6 +28,7 @@ export class Container{
         for (const file of files) {
             const name = file.toString();
             if (name.includes("test")) continue; //skip test files
+            if (name.endsWith("d.ts")) continue; // skip TypeScript declarations Files.
             if (name.includes("js")) continue; //skip configuration files
             if (name.includes("json")) continue; //skip configuration files
             if (name.includes("index.ts")) continue; //skip export files
@@ -193,5 +196,21 @@ export class Container{
             }
         }
         return results;
+    }
+
+
+    public registerLifeCycleListeners(app: any)
+    { 
+        
+        for (const [type] of this.providers.entries()){
+            // Check if class has lifecycle decorators
+            const handlers = Reflect.getMetadata(HANDLERS_KEY, type) || [];
+            const runners =  Reflect.getMetadata(RUNNERS_KEY, type) || [];
+
+            if(handlers.length > 0 || runners.length > 0){
+                const instance = this.get(type);
+                registerEventHandlers(instance, app);
+            }
+        }
     }
 }

@@ -1,8 +1,5 @@
-import { LifeCyclePhase , EventHandlerMeta } from  "@xtaskjs/core"; 
-
-
-const HANDLERS_KEY = Symbol("eventHandlers");
-const RUNNERS_KEY = Symbol("runners");
+import { HANDLERS_KEY } from "./constants";
+import { EventHandlerMeta , LifeCyclePhase } from "../../../types";
 
 export function OnEvent(phase: LifeCyclePhase, priority = 0): MethodDecorator {
   return (target, propertyKey) => {
